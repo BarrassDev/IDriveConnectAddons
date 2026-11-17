@@ -72,6 +72,8 @@ object NotificationTextExtractor {
     }
 
     private fun collectTexts(view: View, out: MutableList<Pair<String, String>>) {
+        // action buttons ("Switch off", "Exit navigation") are not navigation data
+        if (view is android.widget.Button) return
         if (view is TextView) {
             val text = view.text?.toString()?.trim()
             if (!text.isNullOrEmpty()) {

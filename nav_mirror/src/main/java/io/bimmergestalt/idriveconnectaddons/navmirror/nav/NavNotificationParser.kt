@@ -14,9 +14,14 @@ data class NotificationTexts(
     /** resource entry name -> text, in layout order, for custom notification layouts */
     val viewTexts: List<Pair<String, String>> = emptyList(),
 ) {
+    companion object {
+        /** views from the system notification template that carry no navigation data */
+        val HEADER_VIEWS = setOf("time", "chronometer", "app_name_text", "header_text_divider", "header_text_secondary_divider", "expand_button", "profile_badge")
+    }
+
     fun all(): List<String> {
-        return (listOf(title, text, subText, bigText, infoText) + lines + viewTexts.map { it.second })
-            .filterNotNull().map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+        return (listOf(title, text, subText, bigText, infoText) + lines + viewTexts.filter { it.first !in HEADER_VIEWS }.map { it.second })
+            .filterNotNull().map { it.trim() }.filter { it.isNotEmpty() && it != "•" && it != "·" }.distinct()
     }
 
     /** Finds the text of the first named view that has any text */

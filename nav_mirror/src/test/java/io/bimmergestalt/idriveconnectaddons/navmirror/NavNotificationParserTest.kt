@@ -84,6 +84,22 @@ class NavNotificationParserTest {
     }
 
     @Test
+    fun testWazeRunningWithSystemHeader() {
+        // as captured from a Samsung phone: the inflated layout includes the header timestamp and an action button
+        val texts = NotificationTexts(title = "Waze", text = "Running. Tap to open.", viewTexts = listOf(
+            "app_name_text" to "Waze",
+            "header_text_divider" to "•",
+            "time" to "03:04",
+            "title" to "Waze",
+            "text" to "Running. Tap to open.",
+            "action0" to "Switch Off",
+        ))
+        val state = NavNotificationParser.parse(NavSource.WAZE, texts)
+        assertFalse(state.navigating)
+        assertNull(state.eta)
+    }
+
+    @Test
     fun testEmpty() {
         val state = NavNotificationParser.parse(NavSource.WAZE, NotificationTexts())
         assertFalse(state.navigating)

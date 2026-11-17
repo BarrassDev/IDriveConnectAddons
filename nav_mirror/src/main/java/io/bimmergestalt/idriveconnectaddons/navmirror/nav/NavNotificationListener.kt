@@ -95,7 +95,14 @@ class NavNotificationListener: NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         sbn ?: return
         val source = NavSource.fromPackage(sbn.packageName) ?: return
-        if (!sbn.isOngoing) return
+        val notification = sbn.notification
+        val foreground = (notification.flags and android.app.Notification.FLAG_FOREGROUND_SERVICE) != 0
+        Log.d(TAG, "Notification from ${sbn.packageName} id=${sbn.id} ongoing=${sbn.isOngoing} foreground=$foreground " +
+            "flags=0x${Integer.toHexString(notification.flags)} channel=${notification.channelId} " +
+            "title=${notification.extras?.getCharSequence(android.app.Notification.EXTRA_TITLE)} " +
+            "text=${notification.extras?.getCharSequence(android.app.Notification.EXTRA_TEXT)} " +
+            "sub=${notification.extras?.getCharSequence(android.app.Notification.EXTRA_SUB_TEXT)}")
+        if (!sbn.isOngoing && !foreground) return
 
         // navigation apps update their notification many times a second, so coalesce updates
         pending.remove(source)?.also { handler.removeCallbacks(it) }
