@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">Nav Mirror</string>
+    <string name="share_target_label">Send to car navigation</string>
+    <string name="app_desc">This BimmerGestalt addon mirrors your phone navigation into the car. Share a destination from Google Maps or Waze to \"Send to car navigation\" and it starts the car\'s own navigation, which shows on the digital dash and head-up display. While Google Maps or Waze is navigating, the next turn and ETA are also shown inside the car app.</string>
+    <string name="notification_channel_name">Navigation sync</string>
+
+    <string name="lbl_status">Status:</string>
+    <string name="lbl_car">Car:</string>
+    <string name="lbl_phone_nav">Phone navigation:</string>
+    <string name="lbl_destination">Captured destination:</string>
+    <string name="lbl_last_sent">Last sent to car:</string>
+    <string name="lbl_none">None</string>
+    <string name="lbl_car_disconnected">Not connected</string>
+    <string name="lbl_car_connected">Connected, car app starting</string>
+    <string name="lbl_car_ready">Connected, ready to send</string>
+    <string name="lbl_car_no_navigate">Connected, but car layout has no navigate action</string>
+    <string name="lbl_car_navigating">Car navigation active</string>
+    <string name="lbl_phone_nav_inactive">Not navigating</string>
+    <string name="lbl_notification_access">Notification access lets Nav Mirror see the Google Maps and Waze turn-by-turn notifications:</string>
+    <string name="btn_grant_notification_access">Grant notification access</string>
+    <string name="lbl_notification_auth">Allow a status notification when a destination is sent:</string>
+    <string name="btn_grant_notification_auth">Grant notification permission</string>
+    <string name="lbl_auto_send">Automatically send captured destinations to the car</string>
+    <string name="lbl_geocode_hints">Experimental: look up destination names found in Waze/Maps notifications</string>
+    <string name="btn_send_now">Send to car now</string>
+    <string name="btn_refresh_send">Refresh &amp; send to car</string>
+    <string name="btn_clear">Clear</string>
+    <string name="toast_no_destination">No destination yet. Share a place from Google Maps or Waze first.</string>
+    <string name="toast_car_not_ready">Car not connected. The destination is saved and will be sent when it connects.</string>
+    <string name="hint_paste_link">Paste a Google Maps, Waze, or geo: link</string>
+    <string name="btn_parse_link">Use link</string>
+    <string name="lbl_howto">How to use: in Google Maps or Waze open the place (or the route), tap Share, and choose \"Send to car navigation\". The destination is remembered and pushed to the car as soon as it is connected.</string>
+    <string name="toast_parse_failed">Could not find a location in: %1$s</string>
+    <string name="toast_captured">Destination captured: %1$s</string>
+    <string name="toast_sent">Sent to car navigation: %1$s</string>
+    <string name="toast_not_connected">Destination saved, it will be sent when the car connects</string>
+    <string name="notification_sent_title">Car navigation started</string>
+
+    <!-- Car Strings -->
+    <string name="CAR_TITLE">Nav Mirror</string>
+    <string name="CAR_PHONE_NAV">Phone navigation</string>
+    <string name="CAR_NOT_NAVIGATING">Phone is not navigating</string>
+    <string name="CAR_NEXT">Next</string>
+    <string name="CAR_ETA">ETA</string>
+    <string name="CAR_DESTINATION">Destination</string>
+    <string name="CAR_NO_DESTINATION">No destination captured yet. Share a place from Google Maps or Waze to Nav Mirror.</string>
+    <string name="CAR_SEND">Start car navigation to this destination</string>
+    <string name="CAR_SENT">Car navigation started</string>
+    <string name="CAR_NAV_ACTIVE">Car navigation active</string>
+    <string name="CAR_NO_NAVIGATE">This car layout does not support starting navigation</string>
+</resources>

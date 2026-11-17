@@ -18,6 +18,7 @@ Built on top of this easy CDS access, a few example apps have been provided to i
 There's also the concept of a Car Connection Addon, which starts up and shuts down together with the main car connection. These require implementing the full car app protocol and are much more complicated to develop, but can provide some incredible features:
 
 - [screen_mirror](screen_mirror) adds an app to the car to show a copy of the phone screen on the car's screen.
+- [nav_mirror](nav_mirror) mirrors Google Maps / Waze navigation into the car: share a destination to it and it starts the car's native navigation (digital dash included), and shows the phone's next turn and ETA in the car.
 - [Hass Gestalt](https://github.com/BimmerGestalt/HassGestalt) provides access to Home Assistant dashboards in the car's screen
 - [ReadYou Gestalt](https://github.com/BimmerGestalt/ReadYou) adds an RSS news app to the car's screen, based on [ReadYou](https://f-droid.org/packages/me.ash.reader/)
 
