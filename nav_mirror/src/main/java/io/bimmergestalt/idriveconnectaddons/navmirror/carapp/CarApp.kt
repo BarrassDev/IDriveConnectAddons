@@ -58,6 +58,8 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
         val sas_response = securityAccess.signChallenge(challenge = sas_challenge)
         carConnection.sas_login(sas_response)
 
+        logCarInfo()
+
         createAmApp()
 
         carApp = createRhmiApp()
@@ -79,6 +81,38 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
             NavMirror.onCarAppMissingNavigate()
         }
         Log.i(TAG, "CarApp running, navigation supported: ${navigationTrigger != null}")
+    }
+
+    /**
+     * One-time dump of what this head unit advertises, for comparing cars.
+     * Logged under `NavMirrorCar` and written to the app files dir, read with
+     * `adb shell run-as io.bimmergestalt.idriveconnectaddons.navmirror cat files/car_info.txt`
+     */
+    private fun logCarInfo() {
+        val out = StringBuilder()
+        out.append("# dumped ${java.util.Date()}\n")
+        try {
+            val caps = carConnection.rhmi_getCapabilities("", 255)
+            caps.entries.sortedBy { it.key.toString() }.forEach {
+                out.append("capability ${it.key} = ${it.value}\n")
+            }
+        } catch (e: Exception) {
+            out.append("rhmi_getCapabilities failed: $e\n")
+        }
+        try {
+            val info = carConnection.info_getSystemInfo("")
+            info.entries.sortedBy { it.key.toString() }.forEach {
+                out.append("systeminfo ${it.key} = ${it.value}\n")
+            }
+        } catch (e: Exception) {
+            out.append("info_getSystemInfo failed: $e\n")
+        }
+        out.lines().filter { it.isNotBlank() }.forEach { Log.i("NavMirrorCar", it) }
+        try {
+            java.io.File(androidResources.context.filesDir, "car_info.txt").writeText(out.toString())
+        } catch (e: Exception) {
+            Log.w("NavMirrorCar", "Could not write car_info.txt", e)
+        }
     }
 
     private fun createAmApp() {
