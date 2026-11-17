@@ -60,7 +60,9 @@ object NavNotificationParser {
         val instruction = texts.view("nav_description")
         val summary = texts.view("nav_time", "header_text")
         val lockscreen = texts.view("lockscreen_directions", "lockscreen_oneliner")
-        if (distanceToNext == null && instruction == null && summary == null && lockscreen == null) {
+        // current Google Maps builds use the standard template (title = distance, text = instruction, subText = summary);
+        // header_text alone is just the standard template showing the subText
+        if (distanceToNext == null && instruction == null && lockscreen == null) {
             return parseGeneric(NavSource.GOOGLE_MAPS, texts)
         }
 
@@ -92,8 +94,14 @@ object NavNotificationParser {
         val time = parts.firstOrNull { DURATION_REGEX.containsMatchIn(it) }
         val eta = parts.firstOrNull { it != time && TIME_REGEX.containsMatchIn(it) }
         val distance = parts.firstOrNull { it != time && it != eta && DISTANCE_REGEX.containsMatchIn(it) }
-        return Triple(eta, time, distance)
+        return Triple(cleanEta(eta), time, distance)
     }
+
+    /** "04:31 ETA" -> "04:31" */
+    private fun cleanEta(eta: String?): String? {
+        return eta?.replace(ETA_WORD, "")?.replace(Regex("\\s+"), " ")?.trim()?.takeIf { it.isNotEmpty() }
+    }
+    private val ETA_WORD = Regex("\\bETA\\b:?", RegexOption.IGNORE_CASE)
 
     /** Best-effort parsing for standard notification layouts, used for Waze */
     fun parseGeneric(source: NavSource, texts: NotificationTexts): PhoneNavState {
@@ -102,8 +110,9 @@ object NavNotificationParser {
         val parts = all.flatMap { it.split(SEPARATOR) }.map { it.trim() }.filter { it.isNotEmpty() }
 
         val remainingTime = parts.firstOrNull { DURATION_REGEX.containsMatchIn(it) }
-        val eta = parts.firstOrNull { it != remainingTime && TIME_REGEX.containsMatchIn(it) }
-        val distanceParts = parts.filter { it != remainingTime && it != eta && DISTANCE_REGEX.containsMatchIn(it) }
+        val etaPart = parts.firstOrNull { it != remainingTime && TIME_REGEX.containsMatchIn(it) }
+        val eta = cleanEta(etaPart)
+        val distanceParts = parts.filter { it != remainingTime && it != etaPart && DISTANCE_REGEX.containsMatchIn(it) }
         val destinationHint = parts.firstNotNullOfOrNull { DESTINATION_HINT.matchEntire(it)?.groupValues?.get(1)?.trim() }
             ?.takeIf { it.isNotBlank() && !TIME_REGEX.containsMatchIn(it) && !DISTANCE_REGEX.containsMatchIn(it) }
         val rerouting = all.any { REROUTING.containsMatchIn(it) }
@@ -113,7 +122,7 @@ object NavNotificationParser {
         val distanceToNext = if (titleIsDistance) texts.title?.trim() else null
         val instruction = listOfNotNull(texts.text, texts.bigText, if (titleIsDistance) null else texts.title)
             .map { it.trim() }
-            .firstOrNull { it.isNotBlank() && it != eta && it != remainingTime }
+            .firstOrNull { it.isNotBlank() && it != etaPart && it != remainingTime }
         val remainingDistance = distanceParts.firstOrNull { it != distanceToNext && it != instruction }
 
         val navigating = eta != null || remainingDistance != null || distanceToNext != null || destinationHint != null || rerouting

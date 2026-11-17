@@ -55,6 +55,32 @@ class NavNotificationParserTest {
     }
 
     @Test
+    fun testGoogleMapsStandardTemplateFromPhone() {
+        // as captured from a Samsung phone running a 2026 Google Maps build
+        val texts = NotificationTexts(title = "0 ft", text = "towards Wolverton Park Rd", subText = "1 hr 20 min · 59 mi · 04:31 ETA", viewTexts = listOf(
+            "app_name_text" to "Maps",
+            "header_text_divider" to "•",
+            "header_text" to "1 hr 20 min · 59 mi · 04:31 ETA",
+            "time" to "03:11",
+            "title" to "0 ft",
+            "text" to "towards Wolverton Park Rd",
+        ))
+        val state = NavNotificationParser.parse(NavSource.GOOGLE_MAPS, texts)
+        assertTrue(state.navigating)
+        assertEquals("0 ft", state.distanceToNext)
+        assertEquals("towards Wolverton Park Rd", state.instruction)
+        assertEquals("04:31", state.eta)
+        assertEquals("1 hr 20 min", state.remainingTime)
+        assertEquals("59 mi", state.remainingDistance)
+
+        // later updates leave the title empty
+        val later = NavNotificationParser.parse(NavSource.GOOGLE_MAPS, texts.copy(title = "", viewTexts = texts.viewTexts.filter { it.first != "title" }))
+        assertEquals("towards Wolverton Park Rd", later.instruction)
+        assertNull(later.distanceToNext)
+        assertEquals("04:31", later.eta)
+    }
+
+    @Test
     fun testGoogleMapsRerouting() {
         val texts = NotificationTexts(viewTexts = listOf("nav_description" to "Rerouting..."))
         val state = NavNotificationParser.parse(NavSource.GOOGLE_MAPS, texts)
@@ -69,7 +95,7 @@ class NavNotificationParserTest {
         assertTrue(state.navigating)
         assertEquals("Home", state.destinationHint)
         assertEquals("Turn left in 300 m", state.instruction)
-        assertEquals("ETA 18:45", state.eta)
+        assertEquals("18:45", state.eta)
         assertEquals("24 min", state.remainingTime)
         assertEquals("12 km", state.remainingDistance)
     }
