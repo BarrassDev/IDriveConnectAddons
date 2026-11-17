@@ -41,3 +41,21 @@ found in notifications* tries to geocode a destination name if a notification ha
 - `nav/NavNotificationListener`, `NotificationTextExtractor`, `NavNotificationParser` read the navigation apps' notifications.
 - `carapp/CarApp` connects to the car, `carapp/NavigationTrigger` fires the navigate action,
   `carapp/views/StatusView` is the screen in the car.
+
+## Debugging the notification parsing
+
+The notification listener logs every Google Maps / Waze notification it receives, and how it was interpreted.
+With the phone attached over USB debugging:
+
+```
+adb logcat -s NavMirrorListener NavMirror
+```
+
+- `Notification from com.waze ...` lines show the raw title / text / subtext of each notification.
+- `Parsed ... PhoneNavState(...)` lines show what the parser made of it (`navigating`, `instruction`, `eta`, ...).
+- `rawTexts=[...]` lists every piece of text found in the notification layout.
+
+Known so far (November 2026): Google Maps posts a standard notification with the distance in the title, the
+instruction in the text, and "time · distance · ETA" in the subtext. Waze only posts a static
+"Running. Tap to open." notification, so no live turn data is available from Waze. If Waze starts posting
+navigation data, the raw lines above show the wording to add to `nav/NavNotificationParser.kt`.
