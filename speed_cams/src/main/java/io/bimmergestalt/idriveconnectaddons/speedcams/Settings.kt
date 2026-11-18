@@ -27,6 +27,11 @@ class Settings(context: Context) {
         set(value) = prefs.edit().putBoolean("showKmh", value).apply()
     val showMph: Boolean get() = !showKmh
 
+    /** Experimental: send nearby cameras to the car's own navigation map */
+    var carMapOverlay: Boolean
+        get() = prefs.getBoolean("carMapOverlay", false)
+        set(value) = prefs.edit().putBoolean("carMapOverlay", value).apply()
+
     var mapStyle: MapStyle
         get() = try { MapStyle.valueOf(prefs.getString("mapStyle", MapStyle.AUTO.name)!!) } catch (e: Exception) { MapStyle.AUTO }
         set(value) = prefs.edit().putString("mapStyle", value.name).apply()

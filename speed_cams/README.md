@@ -32,11 +32,22 @@ Warns about speed cameras on the road ahead and adds a full-screen map to the iD
 
 The phone screen shows the exact picture sent to the car.
 
+## Experimental: cameras on the car's own map
+
+The car's protocol has an undocumented map overlay service (`map_create`, `map_initializeImport`,
+`map_showOverlay`). With the experimental toggle on, the app sends the cameras within 3 miles to it
+and re-sends them every mile. Nobody has documented the file format it expects, so the first run
+tries KML, KMZ, GPX, OV2 and CSV in turn and keeps the first one the car accepts.
+Every step and the car's answers are written to `files/map_overlay.txt`:
+
+    adb shell run-as io.bimmergestalt.idriveconnectaddons.speedcams cat files/map_overlay.txt
+
+Even if it works, the native navigation will not warn about these pins; the warnings still come from this app.
+
 ## Limitations
 
-- It cannot add cameras to the car's own navigation map or the digital cluster.
-  The car offers no interface for that, so the camera map is a separate app page and the
-  alerts are the popup, the phone audio and the notification.
+- The digital cluster only shows the car's own navigation. The camera map is a separate app page,
+  and the alerts are the popup, the phone audio and the notification.
 - The car's planned route is not available, so "ahead" means the most likely continuation of the
   current road. A camera just after a turn you are about to take alerts once you have turned.
 - Camera coverage and limits are only as good as OpenStreetMap. Mobile camera sites are rarely mapped.

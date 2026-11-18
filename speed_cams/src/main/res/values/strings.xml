@@ -14,6 +14,8 @@
     <string name="label_voice">Spoken alerts</string>
     <string name="label_heading_up">Heading-up map</string>
     <string name="label_kmh">Show km/h instead of mph</string>
+    <string name="label_car_map_overlay">Experimental: show cameras on the car\'s own map</string>
+    <string name="hint_car_map_overlay">Tries the car\'s undocumented map overlay. Cameras within 3 miles are re-sent every mile you drive. Each step is logged to map_overlay.txt.</string>
     <string name="label_alert_distance">Alert distance</string>
     <string name="label_map_style">Map style</string>
     <string name="style_auto">Auto</string>

@@ -69,6 +69,11 @@ object SpeedCams {
             updateRendering()
         }
 
+    /** Progress of the experimental car map overlay, shown on the phone */
+    @Volatile var overlayStatus: String? = null
+    /** Set by the car app, called when the experimental overlay toggle changes */
+    @Volatile var onOverlayToggled: ((Boolean) -> Unit)? = null
+
     private var initialized = false
     private lateinit var engine: Handler
     private lateinit var render: Handler
@@ -302,6 +307,7 @@ object SpeedCams {
             !phoneLocation.hasPermission() -> "No phone location permission, using car GPS only"
             else -> ""
         }
+        overlayStatus?.let { lines += it }
         return lines.filter { it.isNotEmpty() }.joinToString("\n")
     }
 

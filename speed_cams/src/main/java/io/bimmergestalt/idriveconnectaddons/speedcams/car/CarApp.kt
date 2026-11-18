@@ -48,6 +48,7 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
     private var popup: AlertPopup? = null
     private val pendingFrame = AtomicReference<ByteArray?>(null)
     private val hidePopup = Runnable { popup?.hide() }
+    private var overlay: MapOverlayExperiment? = null
 
     init {
         Log.i(TAG, "Starting connecting to car")
@@ -70,6 +71,8 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
 
         SpeedCams.carOutput = this
         SpeedCams.acquire()
+        SpeedCams.onOverlayToggled = { enabled -> setOverlay(enabled) }
+        setOverlay(SpeedCams.settings.carMapOverlay)
         Log.i(TAG, "CarApp running")
     }
 
@@ -84,6 +87,20 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
             carConnection.map_dispose(handle)
         } catch (e: Exception) {
             Log.i(TAG, "map_create is not available: $e")
+        }
+    }
+
+    /** Starts or stops the experimental car map overlay, from the toggle on the phone */
+    @Synchronized
+    private fun setOverlay(enabled: Boolean) {
+        if (enabled && overlay == null) {
+            val file = java.io.File(androidResources.context.filesDir, "map_overlay.txt")
+            try { file.appendText("--- ${java.util.Date()}\n") } catch (e: Exception) {}
+            overlay = MapOverlayExperiment(carConnection, file).also { it.start() }
+        } else if (!enabled && overlay != null) {
+            overlay?.stop()
+            overlay = null
+            SpeedCams.overlayStatus = null
         }
     }
 
@@ -209,6 +226,8 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
     fun onDestroy() {
         if (destroyed) return
         destroyed = true
+        setOverlay(false)
+        SpeedCams.onOverlayToggled = null
         if (SpeedCams.carOutput === this) SpeedCams.carOutput = null
         SpeedCams.release()
     }
@@ -249,6 +268,10 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
             } catch (e: Exception) {
                 Log.e(TAG, "Received exception while handling rhmi_onHmiEvent", e)
             }
+        }
+
+        override fun map_onEvent(handle: Int?, transferId: Int?, event: BMWRemoting.MapEvent?) {
+            overlay?.onEvent(handle, transferId, event)
         }
 
         override fun cds_onPropertyChangedEvent(handle: Int?, ident: String?, propertyName: String?, propertyValue: String?) {

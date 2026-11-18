@@ -86,6 +86,13 @@ class MainActivity : AppCompatActivity() {
             isChecked = settings.showKmh
             setOnCheckedChangeListener { _, checked -> settings.showKmh = checked }
         }
+        findViewById<SwitchMaterial>(R.id.carMapOverlay).apply {
+            isChecked = settings.carMapOverlay
+            setOnCheckedChangeListener { _, checked ->
+                settings.carMapOverlay = checked
+                SpeedCams.onOverlayToggled?.invoke(checked)
+            }
+        }
         findViewById<RadioGroup>(R.id.distance).apply {
             check(when (settings.alertMiles) { 0.2f -> R.id.dist02; 0.5f -> R.id.dist05; else -> R.id.dist03 })
             setOnCheckedChangeListener { _, id ->
