@@ -27,17 +27,17 @@ object OverpassParser {
     }
 
     /**
-     * Drivable roads around a point with only the tags this app reads.
-     * Stripping the other tags and node ids keeps a dense city patch to a few hundred KB gzipped;
-     * junctions are found from shared coordinates instead.
+     * Drivable roads around a point, with tags and inline geometry.
+     * A plain `out tags geom` is used rather than a `convert` projection: public Overpass
+     * instances reject the convert form with HTTP 502, and this payload is only ~200 KB for a
+     * dense 1.5 km patch. Junctions are found from shared coordinates (no node ids are returned).
      */
     fun roadQuery(lat: Double, lon: Double, radius: Int): String {
         val center = "%.6f,%.6f".format(java.util.Locale.ROOT, lat, lon)
         return """
-            [out:json][timeout:25];
+            [out:json][timeout:60];
             way["highway"~"^($ROAD_TYPES)$"](around:$radius,$center);
-            convert way ::id=id(),::geom=geom(),highway=t["highway"],maxspeed=t["maxspeed"],"maxspeed:type"=t["maxspeed:type"],oneway=t["oneway"],junction=t["junction"],ref=t["ref"],name=t["name"];
-            out geom qt;
+            out tags geom qt;
         """.trimIndent()
     }
 
@@ -119,14 +119,14 @@ object OverpassParser {
         for (i in 0 until elements.length()) {
             val el = elements.getJSONObject(i)
             if (el.optString("type") != "way") continue
-            // GeoJSON LineString from the convert statement: [[lon, lat], ...]
-            val coordinates = el.optJSONObject("geometry")?.optJSONArray("coordinates") ?: continue
-            if (coordinates.length() < 2) continue
+            // inline geometry from `out geom`: [{ "lat":.., "lon":.. }, ...]
+            val geometry = el.optJSONArray("geometry") ?: continue
+            if (geometry.length() < 2) continue
             val tags = el.optJSONObject("tags") ?: JSONObject()
             val highway = tags.optString("highway")
-            val points = List(coordinates.length()) {
-                val c = coordinates.getJSONArray(it)
-                LatLon(c.getDouble(1), c.getDouble(0))
+            val points = List(geometry.length()) {
+                val g = geometry.getJSONObject(it)
+                LatLon(g.getDouble("lat"), g.getDouble("lon"))
             }
             val ids = LongArray(points.size) { nodeKey(points[it]) }
             val oneway = when (tags.optString("oneway")) {

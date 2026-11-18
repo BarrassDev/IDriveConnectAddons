@@ -22,5 +22,5 @@
     <string name="style_light">Light</string>
     <string name="style_dark">Dark</string>
     <string name="preview_hint">This is the picture sent to the iDrive screen</string>
-    <string name="attribution">Speed cameras, speed limits and map data © OpenStreetMap contributors (ODbL). Map tiles © CARTO.</string>
+    <string name="attribution">Speed cameras, speed limits, map data and tiles © OpenStreetMap contributors (ODbL). Tiles from the OpenStreetMap standard tile server.</string>
 </resources>

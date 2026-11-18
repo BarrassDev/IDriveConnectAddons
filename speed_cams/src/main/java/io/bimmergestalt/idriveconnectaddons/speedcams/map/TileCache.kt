@@ -13,20 +13,19 @@ import java.util.Collections
 import java.util.concurrent.Executors
 
 /**
- * Raster map tiles from CARTO's OpenStreetMap basemaps,
+ * Raster map tiles from the OpenStreetMap standard tile server,
  * kept in memory and on disk so repeated drives need little data
  */
 class TileCache(private val cacheDir: File, private val onTileLoaded: () -> Unit) {
     companion object {
         const val TILE_SIZE = 256
         const val DISK_MAX_AGE_MS = 30L * 24 * 3600 * 1000
-        private val SUBDOMAINS = listOf("a", "b", "c", "d")
+        private val SUBDOMAINS = listOf("a", "b", "c")
     }
 
-    enum class Style(val path: String) {
-        LIGHT("rastertiles/voyager"),
-        DARK("dark_all"),
-    }
+    // OpenStreetMap standard tiles need no API key. There is no dark variant,
+    // so the renderer darkens tiles in code for night mode, and both styles share one cache entry.
+    enum class Style { LIGHT, DARK }
 
     private val memory = object : LruCache<String, Bitmap>(48 * 1024 * 1024) {
         override fun sizeOf(key: String, value: Bitmap) = value.byteCount
@@ -35,7 +34,8 @@ class TileCache(private val cacheDir: File, private val onTileLoaded: () -> Unit
     private val failedAt = Collections.synchronizedMap(HashMap<String, Long>())
     private val executor = Executors.newFixedThreadPool(4)
 
-    private fun key(style: Style, z: Int, x: Int, y: Int) = "${style.name}/$z/$x/$y"
+    // key does not depend on style: the same OSM tile serves light and dark
+    private fun key(style: Style, z: Int, x: Int, y: Int) = "osm/$z/$x/$y"
 
     /** Returns the tile if it is ready, otherwise starts loading it and returns null */
     fun get(style: Style, z: Int, x: Int, y: Int): Bitmap? {
@@ -69,7 +69,7 @@ class TileCache(private val cacheDir: File, private val onTileLoaded: () -> Unit
             }
             if (bitmap == null) {
                 val sub = SUBDOMAINS[(x + y) % SUBDOMAINS.size]
-                val url = URL("https://$sub.basemaps.cartocdn.com/${style.path}/$z/$x/$y.png")
+                val url = URL("https://$sub.tile.openstreetmap.org/$z/$x/$y.png")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.connectTimeout = 10_000
                 conn.readTimeout = 15_000

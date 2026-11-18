@@ -13,7 +13,7 @@ import java.io.File
  */
 class CameraStore(private val dir: File) {
     companion object {
-        const val AREA_RADIUS = 60_000.0          // meters around the download point
+        const val AREA_RADIUS = 35_000.0          // meters around the download point
         const val REFRESH_MARGIN = 20_000.0       // re-download when this close to the edge
         const val MAX_AGE_MS = 7L * 24 * 3600 * 1000
         const val RETRY_DELAY_MS = 60_000L
@@ -62,7 +62,7 @@ class CameraStore(private val dir: File) {
             val south = Geo.destination(pos, 180.0, AREA_RADIUS).lat
             val east = Geo.destination(pos, 90.0, AREA_RADIUS).lon
             val west = Geo.destination(pos, 270.0, AREA_RADIUS).lon
-            val json = Overpass.query(OverpassParser.cameraQuery(south, west, north, east), 120_000)
+            val json = Overpass.query(OverpassParser.cameraQuery(south, west, north, east), 180_000)
             val parsed = OverpassParser.parseCameras(json)
             dataFile.writeText(json)
             fetchedAt = System.currentTimeMillis()

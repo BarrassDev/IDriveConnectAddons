@@ -358,10 +358,17 @@ object SpeedCams {
 
     // ---- rendering ----
 
+    // Animated position and heading, eased between the once-per-second GPS fixes so the map glides
+    private var animPos: LatLon? = null
+    private var animHeading: Double? = null
+    private var lastRenderMs = 0L
+    private var lastCarFrameMs = 0L
+
     private val renderLoop = object : Runnable {
         override fun run() {
             renderOnce()
-            if (rendering) render.postDelayed(this, 1000)
+            // the phone preview animates smoothly; the car frames are throttled inside renderOnce
+            if (rendering) render.postDelayed(this, if (previewActive) 66L else 500L)
         }
     }
 
@@ -389,15 +396,21 @@ object SpeedCams {
             val w = car?.frameWidth ?: 1211
             val h = car?.frameHeight ?: 480
             val s = current
-            val pos = s.fix?.position
+            val now = System.currentTimeMillis()
+            val dt = if (lastRenderMs == 0L) 0.0 else ((now - lastRenderMs).coerceAtMost(1000)) / 1000.0
+            lastRenderMs = now
+            val drawState = animate(s, dt)
+            val pos = drawState.fix?.position
             val dark = when (settings.mapStyle) {
                 MapStyle.DARK -> true
                 MapStyle.LIGHT -> false
                 MapStyle.AUTO -> pos != null && Sun.isNight(pos)
             }
             val options = MapRenderer.Options(settings.headingUp, settings.showMph, dark, settings.alertMeters)
-            val bmp = renderer.render(s, w, h, options)
-            if (toCar) {
+            val bmp = renderer.render(drawState, w, h, options)
+            // the car link cannot take 15 fps, so send it about 2 fps
+            if (toCar && now - lastCarFrameMs >= 500) {
+                lastCarFrameMs = now
                 val out = ByteArrayOutputStream(96 * 1024)
                 bmp.compress(Bitmap.CompressFormat.JPEG, 70, out)
                 car?.onFrame(out.toByteArray())
@@ -409,5 +422,35 @@ object SpeedCams {
         } catch (e: Exception) {
             Log.w(TAG, "Render failed", e)
         }
+    }
+
+    /**
+     * Eases the drawn position and heading toward the latest fix, and dead-reckons forward
+     * between fixes using the current speed, so the map moves continuously instead of jumping once a second
+     */
+    private fun animate(s: DriveState, dt: Double): DriveState {
+        val fix = s.fix ?: return s
+        val target = fix.position
+        val speed = s.speed ?: 0.0
+        var p = animPos
+        var hdg = animHeading ?: s.heading
+        // a new fix far away (first fix, big jump, teleport): snap
+        if (p == null || Geo.distance(p, target) > 200) {
+            p = target
+            hdg = s.heading
+        } else {
+            // glide forward along the heading, then gently pull toward the real fix to correct drift
+            if (speed > 1.0 && hdg != null && dt > 0) {
+                p = Geo.destination(p, hdg, speed * dt)
+            }
+            p = LatLon(p.lat + (target.lat - p.lat) * 0.12, p.lon + (target.lon - p.lon) * 0.12)
+            val th = s.heading
+            if (th != null) {
+                hdg = if (hdg == null) th else Geo.normalize(hdg + Geo.angleDiff(hdg, th) * 0.15)
+            }
+        }
+        animPos = p
+        animHeading = hdg
+        return s.copy(fix = fix.copy(position = p), heading = hdg)
     }
 }

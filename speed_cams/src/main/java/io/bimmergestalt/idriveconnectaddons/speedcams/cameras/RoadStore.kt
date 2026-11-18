@@ -34,7 +34,7 @@ class RoadStore {
         loading = true
         lastAttempt = System.currentTimeMillis()
         try {
-            val json = Overpass.query(OverpassParser.roadQuery(pos.lat, pos.lon, RADIUS), 30_000)
+            val json = Overpass.query(OverpassParser.roadQuery(pos.lat, pos.lon, RADIUS), 80_000)
             val roads = OverpassParser.parseRoads(json)
             network = RoadNetwork(roads, pos, RADIUS.toDouble())
             lastError = null

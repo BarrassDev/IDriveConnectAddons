@@ -55,10 +55,10 @@ class ParsingTest {
     fun roads() {
         val json = """
         {"elements":[
-          {"type":"way","id":7,"geometry":{"type":"LineString","coordinates":[[0.0,51.0],[0.0,51.001]]},
-           "tags":{"highway":"motorway","maxspeed":"70 mph","maxspeed:type":"","oneway":"","junction":"","ref":"M1","name":""}},
-          {"type":"way","id":8,"geometry":{"type":"LineString","coordinates":[[0.0,51.001],[0.0,51.002]]},
-           "tags":{"highway":"residential","maxspeed":"","maxspeed:type":"","oneway":"-1","junction":"","ref":"","name":"High Street"}}
+          {"type":"way","id":7,"geometry":[{"lat":51.0,"lon":0.0},{"lat":51.001,"lon":0.0}],
+           "tags":{"highway":"motorway","maxspeed":"70 mph","ref":"M1"}},
+          {"type":"way","id":8,"geometry":[{"lat":51.001,"lon":0.0},{"lat":51.002,"lon":0.0}],
+           "tags":{"highway":"residential","oneway":"-1","name":"High Street"}}
         ]}
         """.trimIndent()
         val roads = OverpassParser.parseRoads(json)

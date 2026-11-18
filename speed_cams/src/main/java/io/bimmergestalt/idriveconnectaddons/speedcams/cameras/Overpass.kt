@@ -30,7 +30,7 @@ object Overpass {
         val conn = URL(endpoint).openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "POST"
-            conn.connectTimeout = 15_000
+            conn.connectTimeout = 20_000
             conn.readTimeout = timeoutMs
             conn.doOutput = true
             conn.setRequestProperty("User-Agent", USER_AGENT)

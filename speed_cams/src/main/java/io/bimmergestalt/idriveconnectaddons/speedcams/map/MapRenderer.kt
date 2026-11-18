@@ -31,6 +31,13 @@ class MapRenderer(private val tiles: TileCache) {
 
     private var zoom = 16
     private val tilePaint = Paint(Paint.FILTER_BITMAP_FLAG)
+    // Inverts and tones the light OSM tiles into a dark-map look, since OSM has no dark tiles
+    private val darkTileFilter = android.graphics.ColorMatrixColorFilter(floatArrayOf(
+        -0.6f, 0f, 0f, 0f, 235f,
+        0f, -0.6f, 0f, 0f, 235f,
+        0f, 0f, -0.6f, 0f, 235f,
+        0f, 0f, 0f, 1f, 0f,
+    ))
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
     private val text = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD) }
@@ -76,6 +83,7 @@ class MapRenderer(private val tiles: TileCache) {
         }
 
         val style = if (options.dark) TileCache.Style.DARK else TileCache.Style.LIGHT
+        tilePaint.colorFilter = if (options.dark) darkTileFilter else null
         canvas.save()
         canvas.concat(matrix)
         val reach = hypot(width.toDouble(), height.toDouble())
@@ -269,7 +277,7 @@ class MapRenderer(private val tiles: TileCache) {
         small.textSize = 14f
         small.textAlign = Paint.Align.RIGHT
         small.color = if (options.dark) Color.argb(170, 255, 255, 255) else Color.argb(170, 0, 0, 0)
-        canvas.drawText("© OpenStreetMap contributors © CARTO", width - 10f, height - 8f, small)
+        canvas.drawText("© OpenStreetMap contributors", width - 10f, height - 8f, small)
     }
 
     private fun centeredText(canvas: Canvas, s: String, x: Float, baseline: Float, size: Float, color: Int) {
