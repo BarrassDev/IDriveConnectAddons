@@ -1,6 +1,7 @@
 package io.bimmergestalt.idriveconnectaddons.speedcams.car
 
 import io.bimmergestalt.idriveconnectaddons.speedcams.cameras.Camera
+import io.bimmergestalt.idriveconnectaddons.speedcams.cameras.CameraType
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -8,19 +9,27 @@ import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
+/** Normal and highlighted PNG icons for one camera type */
+class PoiIcons(val normal: ByteArray, val highlight: ByteArray)
+
 /**
- * Candidate file formats for the car's undocumented map overlay import.
- * Nobody has documented which one the car expects, so the experiment tries each in turn
- * and keeps the first one the car reports as imported.
+ * Candidate file formats for the car's map overlay import, tried in this order.
+ *
+ * [BMW_KMZ] reproduces com.bmwgroup.connected.util.kmz.KmzHelper from the BMW Connected Classic 1.8 SDK,
+ * which ships next to the map_* overlay calls: a zip of doc.kml plus normal_N.png / highlight_N.png icons,
+ * a Folder named "a4a", a Style and StyleMap per POI, and Placemarks with ids "id0", "id1"...
+ * The others are generic fallbacks in case this head unit wants something else.
  */
 enum class PoiFormat(val extension: String) {
+    BMW_KMZ("kmz"),
     KML("kml"),
     KMZ("kmz"),
     GPX("gpx"),
     OV2("ov2"),
     CSV("csv");
 
-    fun encode(cameras: List<Camera>): ByteArray = when (this) {
+    fun encode(cameras: List<Camera>, icons: Map<CameraType, PoiIcons> = emptyMap()): ByteArray = when (this) {
+        BMW_KMZ -> bmwKmz(cameras, icons)
         KML -> kml(cameras).toByteArray()
         KMZ -> zip("doc.kml", kml(cameras).toByteArray())
         GPX -> gpx(cameras).toByteArray()
@@ -32,6 +41,50 @@ enum class PoiFormat(val extension: String) {
         fun label(camera: Camera): String {
             val limit = camera.limit?.let { " ${it.value}${if (it.mph) "mph" else ""}" } ?: ""
             return camera.type.label + limit
+        }
+
+        /** The KMZ layout written by BMW's KmzHelper */
+        fun bmwKml(cameras: List<Camera>, icons: Map<CameraType, PoiIcons>): String = buildString {
+            append("<?xml version='1.0' encoding='utf-8' standalone='yes' ?>\n")
+            append("<kml xmlns=\"http://www.opengis.net/kml/2.2\" xmlns:gx=\"http://www.google.com/kml/ext/2.2\" ")
+            append("xmlns:kml=\"http://www.opengis.net/kml/2.2\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n")
+            append("<Folder>\n<name>a4a</name>\n")
+            cameras.forEachIndexed { i, camera ->
+                val icon = icons[camera.type]
+                if (icon != null) {
+                    append("<Style id=\"normal_$i\"><IconStyle><Icon><href>normal_$i.png</href></Icon></IconStyle></Style>\n")
+                    append("<Style id=\"highlight_$i\"><IconStyle><Icon><href>highlight_$i.png</href></Icon></IconStyle></Style>\n")
+                    append("<StyleMap id=\"style_$i\">")
+                    append("<Pair><key>normal</key><styleUrl>#normal_$i</styleUrl></Pair>")
+                    append("<Pair><key>highlight</key><styleUrl>#highlight_$i</styleUrl></Pair>")
+                    append("</StyleMap>\n")
+                }
+                append("<Placemark id=\"id$i\">")
+                append("<name>").append(escape(label(camera))).append("</name>")
+                append("<address></address><phoneNumber></phoneNumber>")
+                if (icon != null) append("<styleUrl>#style_$i</styleUrl>")
+                // BMW writes the two doubles straight from the Poi fields, longitude first as in standard KML
+                append("<Point><coordinates>").append(camera.position.lon).append(',').append(camera.position.lat)
+                append("</coordinates></Point></Placemark>\n")
+            }
+            append("</Folder>\n</kml>")
+        }
+
+        fun bmwKmz(cameras: List<Camera>, icons: Map<CameraType, PoiIcons>): ByteArray {
+            val out = ByteArrayOutputStream()
+            ZipOutputStream(out).use { zip ->
+                zip.putNextEntry(ZipEntry("doc.kml"))
+                zip.write(bmwKml(cameras, icons).toByteArray())
+                cameras.forEachIndexed { i, camera ->
+                    val icon = icons[camera.type] ?: return@forEachIndexed
+                    zip.putNextEntry(ZipEntry("normal_$i.png"))
+                    zip.write(icon.normal)
+                    zip.putNextEntry(ZipEntry("highlight_$i.png"))
+                    zip.write(icon.highlight)
+                }
+                zip.closeEntry()
+            }
+            return out.toByteArray()
         }
 
         private fun coord(v: Double) = String.format(Locale.ROOT, "%.6f", v)

@@ -37,7 +37,9 @@ The phone screen shows the exact picture sent to the car.
 The car's protocol has an undocumented map overlay service (`map_create`, `map_initializeImport`,
 `map_showOverlay`). With the experimental toggle on, the app sends the cameras within 3 miles to it
 and re-sends them every mile. Nobody has documented the file format it expects, so the first run
-tries KML, KMZ, GPX, OV2 and CSV in turn and keeps the first one the car accepts.
+first tries the KMZ layout written by BMW's own SDK (KmzHelper in BMW Connected Classic 1.8: doc.kml in a
+Folder named "a4a" with per-POI icon styles, plus normal_N.png and highlight_N.png icons), then
+falls back to plain KML, KMZ, GPX, OV2 and CSV, and keeps the first one the car accepts.
 Every step and the car's answers are written to `files/map_overlay.txt`:
 
     adb shell run-as io.bimmergestalt.idriveconnectaddons.speedcams cat files/map_overlay.txt

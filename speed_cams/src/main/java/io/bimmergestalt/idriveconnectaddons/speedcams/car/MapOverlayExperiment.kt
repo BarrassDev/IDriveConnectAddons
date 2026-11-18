@@ -6,6 +6,7 @@ import de.bmw.idrive.BMWRemotingServer
 import io.bimmergestalt.idriveconnectaddons.speedcams.SpeedCams
 import io.bimmergestalt.idriveconnectaddons.speedcams.TAG
 import io.bimmergestalt.idriveconnectaddons.speedcams.cameras.Camera
+import io.bimmergestalt.idriveconnectaddons.speedcams.cameras.CameraType
 import io.bimmergestalt.idriveconnectaddons.speedcams.geo.Geo
 import io.bimmergestalt.idriveconnectaddons.speedcams.geo.LatLon
 import io.bimmergestalt.idriveconnectaddons.speedcams.geo.METERS_PER_MILE
@@ -34,6 +35,11 @@ class MapOverlayExperiment(private val carConnection: BMWRemotingServer, private
         const val CHUNK = 8192
         const val EVENT_TIMEOUT_S = 8L
         const val OVERLAY_ID: Short = 1
+    }
+
+    /** Camera icons drawn once, in the style of the phone map markers */
+    private val icons: Map<CameraType, PoiIcons> by lazy {
+        CameraType.values().associateWith { PoiIcons(PoiIconRenderer.render(it, 40), PoiIconRenderer.render(it, 52)) }
     }
 
     private data class Event(val transferId: Int?, val event: BMWRemoting.MapEvent?)
@@ -130,7 +136,7 @@ class MapOverlayExperiment(private val carConnection: BMWRemotingServer, private
         val h = handle ?: return Result.REJECTED
         flip = !flip
         val filename = "speedcams_${if (flip) "a" else "b"}.${format.extension}"
-        val data = format.encode(cameras)
+        val data = format.encode(cameras, icons)
         val requested = nextTransfer++
         events.clear()
         return try {
