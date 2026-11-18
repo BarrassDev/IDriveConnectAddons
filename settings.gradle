@@ -7,3 +7,4 @@ include ':lib'
 rootProject.name = "IDriveConnectAddons"
 include ':screen_mirror'
 include ':nav_mirror'
+include ':speed_cams'

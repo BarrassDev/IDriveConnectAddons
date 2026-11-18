@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Speed Cams</string>
+    <string name="CAR_TITLE">Speed Cams</string>
+    <string name="CAR_POPUP_TITLE">Speed camera ahead</string>
+
+    <string name="channel_alerts">Speed camera alerts</string>
+    <string name="channel_alerts_description">A short heads-up when a speed camera is on the road ahead</string>
+
+    <string name="btn_grant_location">Grant location</string>
+    <string name="btn_background_location">Allow location all the time</string>
+    <string name="btn_refresh">Re-download cameras</string>
+    <string name="btn_simulate">Simulate approach to nearest camera</string>
+    <string name="btn_test_alert">Test alert sound</string>
+    <string name="label_voice">Spoken alerts</string>
+    <string name="label_heading_up">Heading-up map</string>
+    <string name="label_kmh">Show km/h instead of mph</string>
+    <string name="label_alert_distance">Alert distance</string>
+    <string name="label_map_style">Map style</string>
+    <string name="style_auto">Auto</string>
+    <string name="style_light">Light</string>
+    <string name="style_dark">Dark</string>
+    <string name="preview_hint">This is the picture sent to the iDrive screen</string>
+    <string name="attribution">Speed cameras, speed limits and map data © OpenStreetMap contributors (ODbL). Map tiles © CARTO.</string>
+</resources>
